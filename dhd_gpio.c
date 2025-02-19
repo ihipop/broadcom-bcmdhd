@@ -8,6 +8,9 @@
 #ifdef BCMDHD_PLATDEV
 #include <linux/platform_device.h>
 #endif
+#ifdef CUSTOMER_HW_ROCKCHIP
+#include <linux/rfkill-wlan.h>
+#endif
 
 #ifdef CONFIG_DHD_USE_STATIC_BUF
 #if defined(BCMDHD_MDRIVER) && !defined(DHD_STATIC_IN_DRIVER)
@@ -17,6 +20,11 @@ extern void *dhd_wlan_mem_prealloc(uint bus_type, int index,
 extern void *dhd_wlan_mem_prealloc(int section, unsigned long size);
 #endif
 #endif /* CONFIG_DHD_USE_STATIC_BUF */
+#ifdef CUSTOMER_HW_ROCKCHIP
+#ifdef BCMPCIE
+//extern void rk_pcie_power_on_atu_fixup(void);
+#endif
+#endif
 
 #ifdef BCMDHD_DTS
 /* This is sample code in dts file.
@@ -46,6 +54,12 @@ dhd_wlan_set_power(int on, wifi_adapter_info_t *adapter)
 				return -EIO;
 			}
 		}
+#ifdef CUSTOMER_HW_ROCKCHIP
+		rockchip_wifi_power(1);
+#ifdef BCMPCIE
+//		rk_pcie_power_on_atu_fixup();
+#endif
+#endif
 #ifdef BUS_POWER_RESTORE
 #ifdef BCMPCIE
 		if (adapter->pci_dev) {
@@ -84,6 +98,9 @@ dhd_wlan_set_power(int on, wifi_adapter_info_t *adapter)
 				return -EIO;
 			}
 		}
+#ifdef CUSTOMER_HW_ROCKCHIP
+		rockchip_wifi_power(0);
+#endif
 	}
 
 	return err;
@@ -106,6 +123,9 @@ dhd_wlan_set_carddetect(int present)
 #ifdef CUSTOMER_HW_PLATFORM
 		err = sdhci_force_presence_change(&sdmmc_channel, 1);
 #endif /* CUSTOMER_HW_PLATFORM */
+#ifdef CUSTOMER_HW_ROCKCHIP
+		rockchip_wifi_set_carddetect(1);
+#endif
 #elif defined(BCMPCIE)
 		printf("======== Card detection to detect PCIE card! ========\n");
 #endif
@@ -115,6 +135,9 @@ dhd_wlan_set_carddetect(int present)
 #ifdef CUSTOMER_HW_PLATFORM
 		err = sdhci_force_presence_change(&sdmmc_channel, 0);
 #endif /* CUSTOMER_HW_PLATFORM */
+#ifdef CUSTOMER_HW_ROCKCHIP
+		rockchip_wifi_set_carddetect(0);
+#endif
 #elif defined(BCMPCIE)
 		printf("======== Card detection to remove PCIE card! ========\n");
 #endif
@@ -138,6 +161,9 @@ dhd_wlan_get_mac_addr(unsigned char *buf, int ifidx)
 		struct ether_addr ea_example = {{0x02, 0x11, 0x22, 0x33, 0x44, 0x55}};
 		bcopy((char *)&ea_example, buf, sizeof(struct ether_addr));
 #endif /* EXAMPLE_GET_MAC */
+#ifdef CUSTOMER_HW_ROCKCHIP
+		err = rockchip_wifi_mac_addr(buf);
+#endif
 	}
 
 #ifdef EXAMPLE_GET_MAC_VER2
@@ -232,6 +258,11 @@ dhd_wlan_init_gpio(wifi_adapter_info_t *adapter)
 	int gpio_wl_host_wake = -1;
 	int host_oob_irq = -1;
 	uint host_oob_irq_flags = 0;
+#ifdef CUSTOMER_HW_ROCKCHIP
+#ifdef HW_OOB
+	int irq_flags = -1;
+#endif
+#endif
 #endif
 
 	/* Please check your schematic and fill right GPIO number which connected to
@@ -276,6 +307,7 @@ dhd_wlan_init_gpio(wifi_adapter_info_t *adapter)
 	adapter->gpio_wl_reg_on = gpio_wl_reg_on;
 
 #ifdef CUSTOMER_OOB
+	adapter->gpio_wl_host_wake = -1;
 	if (gpio_wl_host_wake >= 0) {
 		err = gpio_request(gpio_wl_host_wake, "bcmdhd");
 		if (err < 0) {
@@ -299,12 +331,25 @@ dhd_wlan_init_gpio(wifi_adapter_info_t *adapter)
 			return -1;
 		}
 	}
+#ifdef CUSTOMER_HW_ROCKCHIP
+	host_oob_irq = rockchip_wifi_get_oob_irq();
+#endif
 
 #ifdef HW_OOB
 #ifdef HW_OOB_LOW_LEVEL
 	host_oob_irq_flags = IORESOURCE_IRQ | IORESOURCE_IRQ_LOWLEVEL | IORESOURCE_IRQ_SHAREABLE;
 #else
 	host_oob_irq_flags = IORESOURCE_IRQ | IORESOURCE_IRQ_HIGHLEVEL | IORESOURCE_IRQ_SHAREABLE;
+#endif
+#ifdef CUSTOMER_HW_ROCKCHIP
+	host_oob_irq_flags = IORESOURCE_IRQ | IORESOURCE_IRQ_SHAREABLE;
+	irq_flags = rockchip_wifi_get_oob_irq_flag();
+	if (irq_flags == 1)
+		host_oob_irq_flags |= IORESOURCE_IRQ_HIGHLEVEL;
+	else if (irq_flags == 0)
+		host_oob_irq_flags |= IORESOURCE_IRQ_LOWLEVEL;
+	else
+		pr_warn("%s: unknown oob irqflags !\n", __func__);
 #endif
 #else
 	host_oob_irq_flags = IORESOURCE_IRQ | IORESOURCE_IRQ_HIGHEDGE | IORESOURCE_IRQ_SHAREABLE;
