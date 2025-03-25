@@ -504,6 +504,10 @@ ifeq ($(CONFIG_AP6XXX),m)
 EXTRA_LDFLAGS += --strip-debug
 endif
 
+ifneq ($(findstring -none-elf, $(CROSS_COMPILE)),)
+    EXTRA_CFLAGS += -D__KERNEL__ -D__linux__
+endif
+
 obj-$(CONFIG_AP6XXX) += $(MODULE_NAME).o
 $(MODULE_NAME)-objs += $(DHDOFILES)
 ccflags-y := $(EXTRA_CFLAGS)
