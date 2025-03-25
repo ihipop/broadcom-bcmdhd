@@ -489,10 +489,6 @@ ifneq ($(CONFIG_BCMDHD_PCIE),)
 endif
 endif
 
-ifeq ($(CONFIG_BCMDHD_WL_POWERSAVE_DISABLED),y)
-	DHDCFLAGS += -DWL_POWERSAVE_DISABLED
-endif
-
 ARCH ?= arm64
 BCMDHD_ROOT = $(src)
 #$(warning "BCMDHD_ROOT=$(BCMDHD_ROOT)")
