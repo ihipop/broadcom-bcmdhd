@@ -450,12 +450,13 @@ ifeq ($(CONFIG_BCMDHD_FW_PATH),)
 	DHDCFLAGS += -DCONFIG_BCMDHD_FW_PATH="\"/vendor/etc/firmware/fw_bcmdhd.bin\""
 	DHDCFLAGS += -DCONFIG_BCMDHD_NVRAM_PATH="\"/vendor/etc/firmware/nvram.txt\""
 	DHDCFLAGS += -DCONFIG_BCMDHD_CLM_PATH="\"/vendor/etc/firmware/clm_bcmdhd.blob\""
+	DHDCFLAGS += -DCONFIG_BCMDHD_CONFIG_PATH="\"/vendor/etc/firmware/config.txt\""
 else
 	DHDCFLAGS += -DCONFIG_BCMDHD_FW_PATH="\"$(CONFIG_BCMDHD_FW_PATH)\""
 	DHDCFLAGS += -DCONFIG_BCMDHD_NVRAM_PATH="\"$(CONFIG_BCMDHD_FW_PATH)\""
 	DHDCFLAGS += -DCONFIG_BCMDHD_CLM_PATH="\"$(CONFIG_BCMDHD_FW_PATH)\""
+	DHDCFLAGS += -DCONFIG_BCMDHD_CONFIG_PATH="\"$(CONFIG_BCMDHD_FW_PATH)\""
 endif
-	DHDCFLAGS += -DCONFIG_BCMDHD_CONFIG_PATH="\"/vendor/etc/firmware/config.txt\""
 endif
 
 ifeq ($(CONFIG_BCMDHD_FW_SIGNATURE),y)
